@@ -1,190 +1,259 @@
 <?php
+class modelo{
+    private $conexion;
+    private $host = "localhost";
+    private $user = "root";
+    private $pass = "";
+    private $db = "dbblog";
 
-class Modelo {
-    private $dbh;
-
-    public function __construct($dbh) {
-        $this->dbh = $dbh;
+    //Constructor que inicializa la conexion
+    public function __construct(){
+        $this ->conectar();
     }
 
-    public static function validarCredenciales($dbh, $nick, $password) {
-        $stmt = $dbh->prepare("SELECT * FROM usuarios WHERE NICK = ? AND PASSWORD = ?");
-        $stmt->execute([$nick, $password]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }    
-
-    public function obtenerTipoUsuario($idUsuario) {
-        $stmt = $this->dbh->prepare("SELECT tipo FROM usuarios WHERE ID = ?");
-        $stmt->execute([$idUsuario]);
-        return $stmt->fetchColumn();
-    }
-
-    public static function obtenerUsuariosPaginados($dbh, $offset, $registrosPorPagina) {
-        $stmtUsuarios = $dbh->prepare("SELECT * FROM usuarios LIMIT $offset, $registrosPorPagina");
-        $stmtUsuarios->execute();
-        return $stmtUsuarios->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public static function obtenerTotalUsuarios($dbh) {
-        $stmtTotalUsuarios = $dbh->query("SELECT COUNT(*) FROM usuarios");
-        return $stmtTotalUsuarios->fetchColumn();
-    }
-
-    public static function obtenerRegistrosPaginados($dbh, $offset, $registrosPorPagina) {
-        $stmtRegistros = $dbh->prepare("SELECT * FROM logs ORDER BY fecha DESC LIMIT $offset, $registrosPorPagina");
-        $stmtRegistros->execute();
-        return $stmtRegistros->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public static function obtenerTotalRegistros($dbh) {
-        $stmtTotalRegistros = $dbh->query("SELECT COUNT(*) FROM logs");
-        return $stmtTotalRegistros->fetchColumn();
-    }
-
-    public static function obtenerEntradasPaginadas($dbh, $offset, $registrosPorPagina, $direccion) {
-        $stmtEntradas = $dbh->prepare("SELECT entradas.*, categorias.NOMBRE AS NOMBRE_CATEGORIA, usuarios.NICK AS NICK_USUARIO
-                    FROM entradas
-                    LEFT JOIN categorias ON entradas.CATEGORIA_ID = categorias.ID
-                    LEFT JOIN usuarios ON entradas.USUARIO_ID = usuarios.ID
-                    ORDER BY FECHA $direccion
-                    LIMIT $offset, $registrosPorPagina");
-        $stmtEntradas->execute();
-        return $stmtEntradas->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public static function obtenerTotalEntradas($dbh) {
-        $stmtTotalEntradas = $dbh->query("SELECT COUNT(*) FROM entradas");
-        return $stmtTotalEntradas->fetchColumn();
-    }
-
-    public static function registrarUsuario($dbh, $nick, $nombre, $apellidos, $email, $password, $imagen, $tipo) {
-        try {
-            // Mover la imagen a la carpeta de uploads
-            $ruta = "images/" . $imagen["name"];
-            move_uploaded_file($imagen["tmp_name"], $ruta);
-
-            // Realizar el registro del usuario
-            $stmt = $dbh->prepare("INSERT INTO usuarios (NICK, NOMBRE, APELLIDOS, EMAIL, PASSWORD, IMAGEN_AVATAR, tipo) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$nick, $nombre, $apellidos, $email, $password, $ruta, $tipo]);
-
-            // Obtener el ID del usuario recién registrado
-            $idUsuario = $dbh->lastInsertId();
-
-            // Obtener el nombre de usuario
-            $stmtUsuario = $dbh->prepare("SELECT NICK FROM usuarios WHERE ID = ?");
-            $stmtUsuario->execute([$idUsuario]);
-            $nombreUsuario = $stmtUsuario->fetchColumn();
-
-            // Registrar el log con el ID del usuario
-            $stmtLog = $dbh->prepare("INSERT INTO logs (fecha, hora, usuario, tipo_operacion) VALUES (CURDATE(), CURTIME(), ?, 'Registro de usuario (ID: $idUsuario)')");
-            $stmtLog->execute([$nombreUsuario]);
-
-            return true;
-        } catch (PDOException $ex) {
-            return $ex->getMessage();
+    //Funcion para conectar la base de datos
+    public function conectar(){
+        try{
+            $this->conexion = new PDO("mysql:host=$this->host;dbname=$this->db", $this->user,$this->pass);
+            $this->conexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            return TRUE;
+        }catch(PDOException $e){
+            return $e->getMessage();
         }
     }
 
-    public static function registrarEntrada($dbh, $categoriaId, $titulo, $imagen, $contenido, $idUsuario) {
-        try {
-            // Mover la imagen a la carpeta de images
-            $ruta = "images/" . $imagen["name"];
-            move_uploaded_file($imagen["tmp_name"], $ruta);
+    public function listado(){
+        $result = [
+            "datos" => null,
+            "mensaje" => null,
+            "bool" => false
+        ];
 
-            // Realizar el registro de la entrada
-            $stmt = $dbh->prepare("INSERT INTO entradas (CATEGORIA_ID, TITULO, IMAGEN, DESCRIPCION, USUARIO_ID, FECHA) VALUES (?, ?, ?, ?, ?, NOW())");
-            $stmt->execute([$categoriaId, $titulo, $ruta, $contenido, $idUsuario]);
-
-            // Obtener el ID de la entrada recién añadida
-            $idEntrada = $dbh->lastInsertId();
-
-            // Obtener el nombre de usuario
-            $stmtUsuario = $dbh->prepare("SELECT NICK FROM usuarios WHERE ID = ?");
-            $stmtUsuario->execute([$idUsuario]);
-            $nombreUsuario = $stmtUsuario->fetchColumn();
-
-            // Registrar el log con el ID de la entrada
-            $stmtLog = $dbh->prepare("INSERT INTO logs (fecha, hora, usuario, tipo_operacion) VALUES (CURDATE(), CURTIME(), ?, 'Registro de entrada (ID: $idEntrada)')");
-            $stmtLog->execute([$nombreUsuario]);
-
-            return true;
-        } catch (PDOException $ex) {
-            return $ex->getMessage();
+        $page = 0;
+        $longitudPag = 3;
+        
+        if(isset($_GET['page'])&& is_numeric($_GET['page'])){
+            $page = $_GET['page'];
         }
-    }
+        $offset = $page * $longitudPag;
 
-    public static function registrarCategoria($dbh, $nombreCategoria, $idUsuario) {
-        try {
-            // Realizar el registro de la categoría
-            $stmt = $dbh->prepare("INSERT INTO categorias (NOMBRE) VALUES (?)");
-            $stmt->execute([$nombreCategoria]);
+        try{   
+            $sql = "SELECT * FROM (entradas LEFT JOIN usuarios ON usuarios.id=entradas.usuario_id) LEFT JOIN categorias ON categorias.id=entradas.categoria_id LIMIT $longitudPag OFFSET $offset";
+            $resultquery = $this->conexion->query($sql);
+            /*SELECT usuarios.*, entradas.*, categorias.nombre as categoria_nombre FROM usuarios LEFT JOIN entradas ON entradas.usuario_id = usuarios.id LEFT JOIN categorias ON categorias.id = entradas.categoria_id;*/
+            if($resultquery){
+                $result['bool'] = true;
+                $result['datos'] = $resultquery->fetchAll(PDO::FETCH_ASSOC);
+            }
 
-            // Obtener el nombre de usuario
-            $stmtUsuario = $dbh->prepare("SELECT NICK FROM usuarios WHERE ID = ?");
-            $stmtUsuario->execute([$idUsuario]);
-            $nombreUsuario = $stmtUsuario->fetchColumn();
+            $listCount = $this->conexion->query("SELECT COUNT(*) FROM entradas")->fetch()[0];
+            if($page>($listCount/$longitudPag)){
+                $page = 0;
+            }
+            $result['paginas'] = $listCount;
+            $result['offset'] = $offset;
+            $result['longitudPag']=$longitudPag;
 
-            // Obtener el ID de la categoría recién creada
-            $idCategoria = $dbh->lastInsertId();
-
-            // Registrar el log con el ID de la categoría
-            $stmtLog = $dbh->prepare("INSERT INTO logs (fecha, hora, usuario, tipo_operacion) VALUES (CURDATE(), CURTIME(), ?, 'Registro de categoría (ID: $idCategoria)')");
-            $stmtLog->execute([$nombreUsuario]);
-
-            return true;
-        } catch (PDOException $ex) {
-            return $ex->getMessage();
+        }catch(PDOException $e){
+            $result['mensaje'] = $e->getMessage();
         }
+        return $result;
     }
 
-    public function obtenerUsuario($idUsuario) {
-        $stmt = $this->dbh->prepare("SELECT * FROM usuarios WHERE ID = ?");
-        $stmt->execute([$idUsuario]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
 
-    public function actualizarUsuario($idUsuario, $nuevoNick, $nuevoNombre, $nuevoApellido, $nuevoEmail, $nuevoPassword, $rutaFoto) {
-        $stmt = $this->dbh->prepare("UPDATE usuarios SET NICK = ?, NOMBRE = ?, APELLIDOS = ?, EMAIL = ?, PASSWORD = ?, IMAGEN_AVATAR = ? WHERE ID = ?");
-        return $stmt->execute([$nuevoNick, $nuevoNombre, $nuevoApellido, $nuevoEmail, $nuevoPassword, $rutaFoto, $idUsuario]);
-    }
+    public function comprobarUser(){
+        $result = [
+            "datos" => null,
+            "mensaje" => null,
+            "bool" => false
+        ];
 
-    public function obtenerEntradaPorId($id) {
-        $stmt = $this->dbh->prepare("SELECT * FROM entradas WHERE ID = ?");
-        $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-
-    public function obtenerTodasLasCategorias() {
-        $stmt = $this->dbh->query("SELECT * FROM categorias");
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function actualizarEntrada($idEntrada, $nuevoTitulo, $nuevoContenido, $nuevaCategoria, $nuevaImagen) {
-        $stmt = $this->dbh->prepare("UPDATE entradas SET TITULO = ?, DESCRIPCION = ?, CATEGORIA_ID = ? WHERE ID = ?");
-        $stmt->execute([$nuevoTitulo, $nuevoContenido, $nuevaCategoria, $idEntrada]);
-
-        if ($nuevaImagen["size"] > 0) {
-            $imagen = $nuevaImagen["name"];
-            $imagen_temporal = $nuevaImagen["tmp_name"];
-            $ruta = "images/" . $imagen;
-            move_uploaded_file($imagen_temporal, $ruta);
-
-            $stmtImagen = $this->dbh->prepare("UPDATE entradas SET IMAGEN = ? WHERE ID = ?");
-            $stmtImagen->execute([$ruta, $idEntrada]);
+        try{
+            $sql = "SELECT * FROM usuarios";
+            $resultquery = $this->conexion->query($sql);
+            if($resultquery){
+                $result['bool'] = true;
+                $result['datos'] = $resultquery->fetchAll(PDO::FETCH_ASSOC);
+            }
+        }catch(PDOException $e){
+            $result['mensaje'] = $e->getMessage();
         }
+        return $result;
     }
 
-    public function obtenerUsuarioPorId($idUsuario) {
-        $stmt = $this->dbh->prepare("SELECT * FROM usuarios WHERE ID = ?");
-        $stmt->execute([$idUsuario]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+    public function nuevaEntrada($datos){
+        $result = [
+            "bool" => false,
+            "error" => null
+        ];
+
+        try{
+            
+            $sql = "INSERT INTO entradas(usuario_id,categoria_id,titulo,imagen,descripcion,fecha) VALUES (:usuario_id,:categoria_id,:titulo,:imagen,:descripcion,:fecha)";
+
+            $query = $this->conexion->prepare($sql);
+
+            $query->execute([
+                'usuario_id' => $datos['usuario_id'],
+                'categoria_id' => $datos['categoria_id'],
+                'titulo' => $datos['titulo'],
+                'imagen' => $datos['imagen'],
+                'descripcion' => $datos['descripcion'],
+                'fecha' => $datos['fecha']
+            ]);
+
+            if($query){
+                $result['bool']=true;
+            }
+        }catch(PDOException $e){
+            $result['error']=$e->getMessage();
+        }
+        return $result;
     }
 
-    public function obtenerCategoriaPorId($idCategoria) {
-        $stmt = $this->dbh->prepare("SELECT NOMBRE FROM categorias WHERE ID = ?");
-        $stmt->execute([$idCategoria]);
-        return $stmt->fetchColumn();
-    }
-}
+    public function idCat(){
+        $result =[
+            "datos" => null,
+            "mensaje" => null,
+            "bool" => false,
+        ];
 
+        try{
+            $sql = "SELECT * FROM categorias";
+            $resultquery = $this->conexion->query($sql);
+            if($resultquery){
+                $result['bool'] = true;
+                $result['datos'] = $resultquery->fetchAll(PDO::FETCH_ASSOC);
+            }
+        }catch(PDOException $e){
+            $result['mensaje']= $e->getMessage();
+        }
+        return $result;
+    }
+
+    public function registrarLog($datos){
+        $result = [
+            'bool'=> false,
+            'error' => null
+        ];
+        try{
+            $sql = "INSERT INTO logs(usuario,operacion) VALUES(:usuario,:operacion)";
+            $query = $this->conexion->prepare($sql);
+            $query -> execute([
+                'usuario' => $datos['usuario'],
+                'operacion' => $datos['operacion']
+            ]);
+            if($query){
+                $result['bool']=true;
+            }
+        }catch(PDOException $e){
+            $result['error'] = $e -> getMessage();
+        }
+        return $result;
+    }
+
+    public function mostrarLog(){
+        $result = [
+            "datos" => null,
+            "mensaje" => null,
+            "bool" => false
+        ];
+
+        $page = 0;
+        $longitudPag = 10;
+        
+        if(isset($_GET['page'])&& is_numeric($_GET['page'])){
+            $page = $_GET['page'];
+        }
+        $offset = $page * $longitudPag;
+
+        try{   
+            $sql = "SELECT * FROM logs LIMIT $longitudPag OFFSET $offset";
+            $resultquery = $this->conexion->query($sql);
+            if($resultquery){
+                $result['bool'] = true;
+                $result['datos'] = $resultquery->fetchAll(PDO::FETCH_ASSOC);
+            }
+
+            $listCount = $this->conexion->query("SELECT COUNT(*) FROM logs")->fetch()[0];
+            if($page>($listCount/$longitudPag)){
+                $page = 0;
+            }
+            $result['paginas'] = $listCount;
+            $result['offset'] = $offset;
+            $result['longitudPag']=$longitudPag;
+        }catch(PDOException $e){
+            $result['mensaje'] = $e->getMessage();
+        }
+        return $result;
+    }
+
+    public function entrada($datos){
+        $result = [
+            'datos' => null,
+            'mensaje'=> null,
+            'bool' => false
+        ];
+       
+        try{
+            $sql = "SELECT * FROM (entradas LEFT JOIN usuarios ON usuarios.id=entradas.usuario_id) LEFT JOIN categorias ON categorias.id=entradas.categoria_id WHERE entradas.id = $datos";
+            $resultquery = $this->conexion->query($sql);
+            if($resultquery){
+                $result['bool'] = true;
+                $result['datos'] = $resultquery->fetchall(PDO::FETCH_ASSOC);
+            }
+        }catch(PDOException $e){
+            $result['mensaje'] = $e ->getMessage();
+        }
+        return $result;
+    }
+
+    public function delEntrada($datos){
+        $result = [
+            'bool'=> false,
+            'error' => null
+        ];
+        try{
+            $sql = "DELETE FROM entradas WHERE id = $datos";
+            $resultquery = $this->conexion->query($sql);            
+            if($resultquery){
+                $result['bool']=true;
+            }
+        }catch(PDOException $e){
+            $result['error'] = $e -> getMessage();
+        }
+        return $result;
+    }
+
+    public function editar($datos){
+        $result = [
+            "bool" => false,
+            "error" => null
+        ];
+        try{
+            $sql = "UPDATE entradas SET categoria_id= :categoria_id, titulo= :titulo, imagen= :imagen, descripcion= :descripcion WHERE id= :id";
+
+            $query = $this->conexion->prepare($sql);
+
+            $query->execute([
+                'categoria_id' => $datos['categoria_id'],
+                'titulo' => $datos['titulo'],
+                'imagen' => $datos['imagen'],
+                'descripcion' => $datos['descripcion'],
+                'id' => $datos['id']
+            ]);
+
+            if($query){
+                $result['bool']=true;
+            }
+        }catch(PDOException $e){
+            $result['error']=$e->getMessage();
+        }
+        return $result;
+        
+    }
+
+    }
+
+    
 ?>

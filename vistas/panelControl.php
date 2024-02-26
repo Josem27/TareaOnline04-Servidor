@@ -2,60 +2,32 @@
 <html lang="es">
 
 <head>
+    <?php include_once '../includes/header.php'; ?>
     <meta charset="UTF-8">
-    <title>Panel de Control</title>
+    <title>Bienvenido</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 
 <body>
     <div class="container mt-5">
-        <h2 class="text-center mb-4">Panel de Control</h2>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Entradas</h5>
-                        <p class="card-text">Añadir, editar, eliminar y ver detalles de las entradas.</p>
-                        <a href="formulario_entradas.php" class="btn btn-primary">Añadir Entrada</a>
-                        <a href="listado_entradas.php" class="btn btn-secondary">Listado de Entradas</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Usuarios</h5>
-                        <p class="card-text">Añadir, editar, eliminar y ver detalles de los usuarios.</p>
-                        <a href="formulario_usuarios.php" class="btn btn-primary">Añadir Usuario</a>
-                        <a href="listado_usuarios.php" class="btn btn-secondary">Listado de Usuarios</a>
-                    </div>
-                </div>
-            </div>
+        <div class="container cuerpo text-center">
+            <p><h2>Panel de Control<h2></h2></p>
+            <hr width="50%" color="black">
         </div>
-        <div class="row mt-4">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Categorías</h5>
-                        <p class="card-text">Añadir, editar, eliminar y ver detalles de las categorías.</p>
-                        <a href="formulario_categorias.php" class="btn btn-primary">Añadir Categoría</a>
-                        <!--<a href="listado_categorias.php" class="btn btn-secondary">Listado de Categorías</a>-->
-                    </div>
-                </div>
-            </div>
-            <?php if ($tipoUsuario == 1) { ?>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Logs</h5>
-                            <p class="card-text">Ver detalles de los logs.</p>
-                            <a href="listado_logs.php" class="btn btn-secondary">Listado de Logs</a>
-                        </div>
-                    </div>
-                </div>
-            <?php } ?>
+    </div>
+
+    <div class="card text-center">
+        <div class="card-header">
+            Utilidades
         </div>
-        <a href="../logout.php" class="btn btn-danger mt-3">Cerrar sesión</a>
+        <div class="card-body">
+            <h5 class="card-title">AVISO</h5>
+            <p class="card-text">Debe iniciar sesión para poder ver esta página</p>
+            <a href="/index.php?accion=login" class="btn btn-primary">Iniciar sesión</a>
+        </div>
+        <div class="card-footer text-muted">
+            Test
+        </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
