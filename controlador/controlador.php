@@ -17,7 +17,7 @@ class controlador{
             "titulo" => "MVC"
         ];
 
-        include_once 'vistas/inicio.php';
+        include_once 'vistas/login.php';
     }
 
     public function login(){
@@ -182,43 +182,56 @@ class controlador{
             "mensaje" => null
         ];
         $errores = array();
-            $imagen = null;
-            if(isset($_POST['submit']) && !empty($_POST)){
-                if(isset($_FILES["imagen"])&&(!empty($_FILES["imagen"]["tmp_name"]))){
-                    if(!is_dir("fotos")){
-                        $dir = mkdir("fotos",0777,true);
-                    }else{
-                        $dir = true;
-                    }
-
-                    if($dir){
-                        $nombreFichImg = time() . "-" . $_FILES["imagen"]["name"];
-                        $movFichImg = move_uploaded_file($_FILES["imagen"]["tmp_name"], "fotos/" . $nombreFichImg);
-                        $imagen = $nombreFichImg;
-                        if(!$movFichImg){
-                            $errores["imagen"]= "Error, imagen no cargada";
-                        }
+        $imagen = null;
+        
+        if(isset($_POST['submit']) && !empty($_POST)){
+            // Verificar si se envió un archivo de imagen
+            if(isset($_FILES["imagen"]) && !empty($_FILES["imagen"]["tmp_name"])){
+                if(!is_dir("fotos")){
+                    $dir = mkdir("fotos",0777,true);
+                }else{
+                    $dir = true;
+                }
+    
+                if($dir){
+                    $nombreFichImg = time() . "-" . $_FILES["imagen"]["name"];
+                    $movFichImg = move_uploaded_file($_FILES["imagen"]["tmp_name"], "fotos/" . $nombreFichImg);
+                    $imagen = $nombreFichImg;
+                    if(!$movFichImg){
+                        $errores["imagen"]= "Error, imagen no cargada";
                     }
                 }
-
-                if(count($errores)==0){
-                    $resultModelo = $this->modelo->editar([
-                        "titulo" => $_POST['titulo'],
-                        "descripcion" => $_POST['descripcion'],
-                        "categoria_id" => $_POST['categoria'],
-                        "imagen" => $imagen,
-                        "id" => $_GET['id']
-                    ]);
-                    
-                    $resultModelo = $this->modelo->registrarLog([
-                        "usuario" => $_SESSION['nick'],
-                        "operacion" => "Edicion" 
-                    ]);                
-                }
-                header("Location: index.php?accion=listado");
+            } else {
+                // Si no se envió una nueva imagen, mantener la imagen actual
+                $imagen = $_POST['imagen_actual'];
             }
-           
-
+    
+            if(count($errores)==0){
+                $resultModelo = $this->modelo->editar([
+                    "titulo" => $_POST['titulo'],
+                    "descripcion" => $_POST['descripcion'],
+                    "categoria_id" => $_POST['categoria'],
+                    "imagen" => $imagen,
+                    "id" => $_GET['id']
+                ]);
+                
+                $resultModelo = $this->modelo->registrarLog([
+                    "usuario" => $_SESSION['nick'],
+                    "operacion" => "Edicion" 
+                ]);   
+                
+                // Verificar si la edición fue exitosa
+                if($resultModelo['bool']){
+                    // Redirigir solo si la edición fue exitosa
+                    header("Location: index.php?accion=listado");
+                    exit(); // Terminar el script después de la redirección
+                } else {
+                    // Si hay errores, establecer un mensaje de error y cargar la vista de edición nuevamente
+                    $parametros['mensaje'] = "Error al editar la entrada. Por favor, inténtalo de nuevo.";
+                }         
+            }
+        }
+    
         if(isset($_SESSION['logueado'])){
             $datos = $_GET['id'];
             $resultModelo = $this->modelo->entrada($datos);
@@ -229,7 +242,7 @@ class controlador{
                 include_once 'vistas/editarEntrada.php';
             }
         }
-    }
-}
+    }     
+}    
 
 ?>

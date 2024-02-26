@@ -13,26 +13,16 @@
             <?php
             }
             
-            // Si la página es mayor o igual a 1, muestra un botón que va a la página anterior
-            if ($page >= 1) {
+            // Muestra la página actual
             ?>
-            <li class="page-item">
-                <a class="page-link" href="index.php?accion=listado&page=<?= $page - 1 ?>"><?= $page ?></a>
-            </li>
-            <?php
-            }
-            ?>
-            <!-- Este botón es continuo y muestra en qué página se encuentra el usuario -->
             <li class="page-item active">
                 <span class="page-link"><?= $page + 1 ?></span>
             </li>
             <?php
-            // Si la cantidad total de registros es mayor que offset + longitudPag, se muestran los botones de la siguiente página
-            if ($resultModelo['paginas'] > ($resultModelo['offset'] + $resultModelo['longitudPag'])) {
+            
+            // Muestra el botón para ir a la siguiente página
+            if ($resultModelo['paginas'] > ($page + 1)) {
             ?>
-            <li class="page-item">
-                <a class="page-link" href="index.php?accion=listado&page=<?= $page + 1 ?>"><?= $page + 2 ?></a>
-            </li>
             <li class="page-item">
                 <a class="page-link" href="index.php?accion=listado&page=<?= $page + 1 ?>">Siguiente</a>
             </li>

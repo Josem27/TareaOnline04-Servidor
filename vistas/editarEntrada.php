@@ -30,6 +30,8 @@
                 <input type="text" class="form-control" name="titulo" id="titulo" value="<?=$datos['titulo'] ?>">
             </div>
 
+            <input type="hidden" name="imagen_actual" value="<?= $datos['imagen'] ?>">
+
             <div class="form-group">
                 <label for="imagen">Imagen</label><br>
                 <img src="fotos/<?=$datos['imagen'];?>" width="260"><br>
