@@ -20,7 +20,6 @@
                     <button type="submit" class="btn btn-primary btn-block">Registrar Categoría</button>
                 </form>
 
-                <!-- Manejo de errores -->
                 <?php if (isset($error)) { ?>
                     <div class="alert alert-danger mt-3" role="alert">
                         <?php echo $error; ?>
@@ -28,7 +27,7 @@
                 <?php } ?>
 
                 <!-- Botón de vuelta a index.php -->
-                <a href="index.php" class="btn btn-secondary btn-block mt-3">Inicio</a>
+                <a href="panelControl.php" class="btn btn-secondary btn-block mt-3">Inicio</a>
             </div>
         </div>
     </div>

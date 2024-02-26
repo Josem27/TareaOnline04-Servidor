@@ -12,12 +12,39 @@
             <div class="col-md-6">
                 <h2 class="text-center mb-4">Registro de Usuario</h2>
                 <form method="post" action="" enctype="multipart/form-data">
-                    <!-- Agregar campos de formulario -->
+                    <div class="form-group">
+                        <label for="nick">Nick:</label>
+                        <input type="text" id="nick" name="nick" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nombre">Nombre:</label>
+                        <input type="text" id="nombre" name="nombre" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="apellidos">Apellidos:</label>
+                        <input type="text" id="apellidos" name="apellidos" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" name="email" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Contraseña:</label>
+                        <input type="password" id="password" name="password" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="imagen">Imagen Avatar:</label>
+                        <input type="file" id="imagen" name="imagen" class="form-control-file" accept="image/*">
+                    </div>
 
                     <button type="submit" class="btn btn-primary btn-block">Registrar Usuario</button>
                 </form>
 
-                <!-- Manejo de errores -->
                 <?php if (isset($error)) { ?>
                     <div class="alert alert-danger mt-3" role="alert">
                         <?php echo $error; ?>
@@ -25,7 +52,7 @@
                 <?php } ?>
 
                 <!-- Botón de vuelta a index.php -->
-                <a href="index.php" class="btn btn-secondary btn-block mt-3">Inicio</a>
+                <a href="panelControl.php" class="btn btn-secondary btn-block mt-3">Inicio</a>
             </div>
         </div>
     </div>

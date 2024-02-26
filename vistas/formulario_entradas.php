@@ -12,12 +12,33 @@
             <div class="col-md-6">
                 <h2 class="text-center mb-4">Registro de Entrada</h2>
                 <form method="post" action="" enctype="multipart/form-data">
-                    <!-- Agregar campos de formulario -->
+                    <div class="form-group">
+                        <label for="categoria">Categoría:</label>
+                        <select id="categoria" name="categoria" class="form-control" required>
+                            <?php foreach ($categorias as $categoria) { ?>
+                                <option value="<?php echo $categoria['ID']; ?>"><?php echo $categoria['NOMBRE']; ?></option>
+                            <?php } ?>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="txttitulo">Título:</label>
+                        <input type="text" id="txttitulo" name="txttitulo" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="imagen">Imagen:</label>
+                        <input type="file" id="imagen" name="imagen" class="form-control-file" accept="image/*">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="txtcontenido">Descripción:</label>
+                        <textarea id="txtcontenido" name="txtcontenido" class="form-control" required></textarea>
+                    </div>
 
                     <button type="submit" class="btn btn-primary btn-block">Registrar Entrada</button>
                 </form>
 
-                <!-- Manejo de errores -->
                 <?php if (isset($error)) { ?>
                     <div class="alert alert-danger mt-3" role="alert">
                         <?php echo $error; ?>
@@ -25,7 +46,7 @@
                 <?php } ?>
 
                 <!-- Botón de vuelta a index.php -->
-                <a href="index.php" class="btn btn-secondary btn-block mt-3">Inicio</a>
+                <a href="panelControl.php" class="btn btn-secondary btn-block mt-3">Inicio</a>
             </div>
         </div>
     </div>

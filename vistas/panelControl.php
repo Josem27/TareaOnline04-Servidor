@@ -55,7 +55,7 @@
                 </div>
             <?php } ?>
         </div>
-        <a href="logout.php" class="btn btn-danger mt-3">Cerrar sesión</a>
+        <a href="../logout.php" class="btn btn-danger mt-3">Cerrar sesión</a>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
