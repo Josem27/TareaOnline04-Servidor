@@ -12,7 +12,7 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th>Nombre</th>
+                    <th>Categoria</th>
                     <th>Título</th>
                     <th>Descripción</th>
                     <th>Fecha</th>
@@ -33,10 +33,10 @@
                                 <div class="btn-group" role="group">
                                     <a class="btn btn-primary" href="index.php?accion=editar&id=<?= $datos['id'] ?>" role="button">Editar</a>
                                     <a class="btn btn-info" href="index.php?accion=entrada&id=<?= $datos['id'] ?>" role="button">Detalles</a>
-                                    <a class="btn btn-danger" href="index.php?accion=entrada&id=<?= $datos['id'] ?>&borrar=true" role="button">Eliminar</a>
+                                    <a class="btn btn-danger" href="index.php?accion=eliminar&id=<?= $datos['id'] ?>" role="button">Eliminar</a>
                                 </div>
                             <?php else: ?>
-                                <a href="index.php?accion=entrada&id=<?= $datos['id'] ?>" class="btn btn-info">Leer Más</a>
+                                <a href="index.php?accion=entrada&id=<?= $datos['id'] ?>" class="btn btn-info">Detalles</a>
                             <?php endif; ?>
                         </td>
                     </tr>

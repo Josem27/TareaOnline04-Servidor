@@ -29,6 +29,14 @@
             <?php
             }
             ?>
+            <!-- Campo de texto para ir a una página específica -->
+            <li class="page-item">
+                <form class="form-inline" action="index.php" method="GET">
+                    <input type="hidden" name="accion" value="listado">
+                    <input type="number" class="form-control mx-1" name="page" placeholder="Ir a página...">
+                    <button type="submit" class="btn btn-primary">Ir</button>
+                </form>
+            </li>
         </ul>
     </nav>
 </div>

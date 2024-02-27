@@ -167,13 +167,17 @@ class controlador{
     }
 
     public function eliminar(){
-        $resultModelo = $this->modelo->delEntrada($_GET['id']);
+        $id_entrada = $_GET['id'];
+        $resultModelo = $this->modelo->delEntrada($id_entrada);
         $resultModelo = $this->modelo->registrarLog([
             "usuario" => $_SESSION['nick'],
             "operacion" => "Eliminar" 
         ]); 
-        header("Location: index.php?accion=listado");
+    
+        // Recargar los datos del listado después de eliminar la entrada
+        $this->listado();
     }
+    
 
     public function editar(){
         $parametros = [
@@ -243,6 +247,50 @@ class controlador{
             }
         }
     }     
+
+    public function generarPDF() {
+        // Obtener todo el listado de entradas
+        $resultModelo = $this->modelo->listado();
+        $entradas = $resultModelo['datos'];
+    
+        // Incluir los archivos de TCPDF localmente
+        require_once 'tcpdf/tcpdf.php';
+    
+        // Crear una instancia de TCPDF
+        $pdf = new TCPDF();
+    
+        // Establecer la ubicación de las fuentes de TCPDF
+        $fontPath = 'ruta/a/la/carpeta/fonts/';
+        TCPDF_FONTS::addTTFfont($fontPath . 'arial.ttf', 'TrueTypeUnicode', '', 32);
+    
+        // Agregar contenido al PDF (ajusta según tus necesidades)
+        $pdf->AddPage();
+        $pdf->SetFont('times', 'B', 16);
+    
+        foreach ($entradas as $entrada) {
+            $pdf->Cell(0, 10, 'Detalles de Entrada', 0, 1, 'C');
+            $pdf->Cell(0, 10, 'Título: ' . $entrada['titulo'], 0, 1);
+            $pdf->Cell(0, 10, 'Descripción: ' . $entrada['descripcion'], 0, 1);
+            $pdf->Cell(0, 10, 'Autor: ' . $entrada['nick'], 0, 1); // Cambia 'nombre' por el nombre correcto de la columna que almacena el nombre del autor
+            $pdf->Cell(0, 10, 'Categoría: ' . $entrada['categoria_id'], 0, 1); // Cambia 'nombre_categoria' por el nombre correcto de la columna que almacena el nombre de la categoría
+            $pdf->Cell(0, 10, 'Fecha de Creación: ' . $entrada['fecha'], 0, 1);
+    
+            // Agregar la imagen al PDF
+            if ($entrada['imagen'] != null) {
+                $imagePath = 'fotos/' . $entrada['imagen']; // Ajusta la ruta de la imagen según sea necesario
+                $pdf->Image($imagePath, 10, 40, 90, 0, '', '', '', false, 300, '', false, false, 0);
+            }
+    
+            // Agregar un salto de página después de cada entrada
+            $pdf->AddPage();
+        }
+    
+        // Salida del PDF
+        $pdf->Output('Listado_de_Entradas.pdf', 'I');
+        exit();
+    }
+    
+    
 }    
 
 ?>

@@ -40,7 +40,6 @@ class modelo{
         try{   
             $sql = "SELECT * FROM (entradas LEFT JOIN usuarios ON usuarios.id=entradas.usuario_id) LEFT JOIN categorias ON categorias.id=entradas.categoria_id LIMIT $longitudPag OFFSET $offset";
             $resultquery = $this->conexion->query($sql);
-            /*SELECT usuarios.*, entradas.*, categorias.nombre as categoria_nombre FROM usuarios LEFT JOIN entradas ON entradas.usuario_id = usuarios.id LEFT JOIN categorias ON categorias.id = entradas.categoria_id;*/
             if($resultquery){
                 $result['bool'] = true;
                 $result['datos'] = $resultquery->fetchAll(PDO::FETCH_ASSOC);

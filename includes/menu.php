@@ -4,7 +4,7 @@
 </div>
 <div class="container cuerpo text-center">
     <a class="btn btn-success" href="index.php?accion=nuevaEntrada" role="button">Añadir entrada</a>
-    <a class="btn btn-primary" href="#" role="button">Imprimir PDF</a>
+    <a class="btn btn-primary" href="index.php?accion=generarPDF" role="button">Imprimir PDF</a>
 
     <?php if($_SESSION['esAdmin']){?>
         <a class="btn btn-primary" href="index.php?accion=mostrarLog" role="button">Logs</a>
